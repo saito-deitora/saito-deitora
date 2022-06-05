@@ -5,7 +5,6 @@ import pandas as pd
 # YoutubeAPIを使うときに入れる
 from apiclient.discovery import build
 import datetime as dt
-from pytz import timezone
 import gspread
 # googleスプレッドシートを使うとき
 from google.oauth2.service_account import Credentials
@@ -17,8 +16,7 @@ def main():
              'https://www.googleapis.com/auth/drive']
     # 認証情報設定
     # ダウンロードしたjsonファイル名をクレデンシャル変数に設定
-    credentials = Credentials.from_service_account_file(
-        r"C:\Users\81908\Desktop\PythonTutorial\lesson7\youtubesearch\project-deitra-fef3a288c0ba.json", scopes=scope)
+    credentials = Credentials.from_service_account_file(r"C:\Users\81908\Desktop\PythonTutorial\lesson7\youtubesearch\project-deitra-fef3a288c0ba.json", scopes=scope)
     # OAuth2の資格情報を使用してGoogle APIにログインします。
     gc = gspread.authorize(credentials)
     # 共有設定したスプレッドシートキーを変数[SPREADSHEET_KEY]に格納する。
@@ -30,6 +28,7 @@ def main():
     api_key = 'AIzaSyB84J5-WMPRdLnxl_hVebHgTy4siYhEoL4'
     # 今から24時間前の時刻をfromtimeとする（今の時刻のタイムゾーンはYoutubeに合わせて協定世界時刻のutcにする)
     fromtime = (dt.datetime.utcnow()-dt.timedelta(hours=24)).strftime('%Y-%m-%dT%H:%M:%SZ')
+
     # データを入れる空のリストを作成
     data = []
     # キーワードリストを元に検索
@@ -62,8 +61,7 @@ def main():
             # もしも動画数が50件以下ならば、dataに情報を追加してbreak youtubeAPIリファレンスの書き方参照
             if len(result['items']) < 50:
                 for i in result['items']:
-                    data.append([i['id']['videoId'], i['snippet']
-                                ['publishedAd'], i['snippet']['title'], keyword])
+                    data.append([i['id']['videoId'], i['snippet']['publishedAd'], i['snippet']['title'], keyword])
                 break
             # もしも動画数が50件より多い場合はページ送りのトークン(result['nextPageToken']を変数nextpagetokenに設定する
             else:
@@ -94,10 +92,10 @@ def main():
     print(_id_list)
     for videoid in _id_list:
         viewcount = youtube.videos().list(
-            part='statistivs',
-            maxResults=50,
-            id=videoid
-        ).execute()
+                part='statistivs',
+                maxResults=50,
+                id=videoid
+            ).execute()
 
         for i in viewcount['items']:
             viewcount_list.append([i['id'],i['statistics']['viewcount']])
@@ -121,7 +119,7 @@ def main():
     df_data = df_data.query('viewcount>=100000')
     # viewcountの列のデータをint型から文字列型に戻している
     df_data['viewcount'] = df_data['viewcount'].astype(str)
-    df_data = df_data[('search_day', 'keyword', 'title', 'url', 'viewcount')]
+    df_data[['search_day', 'keyword', 'title', 'url', 'viewcount']]
     # 共有設定したスプレッドシートの検索結果シートを開く
     worksheet = gc.open_by_key(SPREADSHEET_KEY).worksheet('検索結果')
 
@@ -131,20 +129,19 @@ def main():
     # 見出し行（1行目)がない場合
     if last_row == 0:
         cell_columns = worksheet.range('A1:E1')
-        cell_columns[0].values = '検索日'
-        cell_columns[1].values = '検索キーワード'
-        cell_columns[2].values = 'title'
-        cell_columns[3].values = 'URL'
-        cell_columns[4].values = '再生回数（検索時）'
+        cell_columns[0].value = '検索日'
+        cell_columns[1].value = '検索キーワード'
+        cell_columns[2].value = 'Title'
+        cell_columns[3].value = 'URL'
+        cell_columns[4].value = '再生回数（検索時）'
         worksheet.update_cells(cell_columns)
         last_row += 1
     # もしdf_dataにデータが入っていない場合は書き込みをpass（Youtube APIで情報が取得されなかった場合)
     length = df_data.shape[0]     # df_dataの行数
     if length == 0:
         pass
-    # df_dataにデータが入っている場合（Youtube APIで情報が見つかった場合)
-    else:
-        cell_list = cell_columns = worksheet.range(f'A{last_row+1}:E{last_row+length}')
+    else:  # df_dataにデータが入っている場合（Youtube APIで情報が見つかった場合)
+        cell_list = worksheet.range(f'A{last_row+1}:E{last_row+length}')
         for cell in cell_list:
             cell.value = df_data.iloc[cell.row-last_row-1][cell.col-1]
     # スプレッドシートに書き出す
