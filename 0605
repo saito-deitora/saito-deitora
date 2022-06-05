@@ -1,4 +1,5 @@
 
+
 # 必要なモジュールをimport
 import math
 import pandas as pd
@@ -66,8 +67,7 @@ def main():
             # もしも動画数が50件より多い場合はページ送りのトークン(result['nextPageToken']を変数nextpagetokenに設定する
             else:
                 for i in result['items']:
-                    data.append([i['id']['videoId'], i['snippet']
-                                ['publishedAd'], i['snippet']['title'], keyword])
+                    data.append([i['id']['videoId'], i['snippet']['publishedAd'], i['snippet']['title'], keyword])
                 nextpagetoken = result['nextpagetoken']
             # data = [[videoId, 投稿日, 動画タイトル, 検索キーワード], [videoId, 投稿日, 動画タイトル, 検索キーワード], ...]
             # datalength = len(data)
@@ -89,12 +89,12 @@ def main():
         _id_list.append(','.join(videoid_list[i*50:(i*50+50)]))
     # 再生回数データを取得して、再生回数リストを作成
     viewcount_list = []
-    print(_id_list)
+
     for videoid in _id_list:
         viewcount = youtube.videos().list(
-                part='statistivs',
+                part='statistics',
                 maxResults=50,
-                id=videoid
+                id = videoid
             ).execute()
 
         for i in viewcount['items']:
