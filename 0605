@@ -99,9 +99,6 @@ def main():
             id=videoid
         ).execute()
 
-
-
-
         for i in viewcount['items']:
             viewcount_list.append([i['id'],i['statistics']['viewcount']])
 
